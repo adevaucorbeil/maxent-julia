@@ -177,5 +177,6 @@ function maxent(dim,n,ncoord,x,prior_type,gamma,ilambda,rtol,compute,
     if checktest=="yes"
       consistencycheck(dim,x,lambda,rtol,compute,phi,phider,ncoord,contribute,len)
     end
+    return (contribute, phi)
 
 end

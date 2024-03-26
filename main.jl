@@ -1,7 +1,7 @@
 ################################################################################
 #                          Load necessary functions
 ################################################################################
-
+using Plots; pyplot();
 #Load auxiliar functions
 include("computephi.jl")
 include("f_of_lambda.jl")
@@ -19,8 +19,6 @@ include("maxent.jl")
 
 dim = 2     #  ilambda in prior function data must be a vector of size dim
 
-# number of nodes
-n = 8
 
 # unstructured nodes (WARNING: unstructured = 1 is an experimental feature;
 #                     use unstructured = 0 unless you know what you are doing)
@@ -35,13 +33,23 @@ unstructured = 0  #1 = true, 0 = false
 #ncoord = [0.5 0.5; 1.5 0.5; 1.5 1.5; 0.5 1.5];
 #ncoord=[0 0; 1 0; 1 1; 0 1; 0.5 0.5; 0.25 0.25; 0.25 0.75; 0.75 0.25; 0.75 0.75];
 #ncoord = [0.0 0.0; 1.0 0.0; 1.0 1.0; 0.0 1.0];
-ncoord = [0.0 0.0; 0.5 0.0; 0.0 0.5; 0.5 0.5; 1.0 0.5; 0.0 1.0; 0.5 1.0; 1.0 1.0];
+#ncoord = [0.0 0.0; 0.5 0.0; 0.0 0.5; 0.5 0.5; 1.0 0.5; 0.0 1.0; 0.5 1.0; 1.0 1.0];
 #ncoord = [0 0 0; 1 0 0; 1 1 0; 0 1 0; 0 0 1; 1 0 1; 1 1 1; 0 1 1];
 #ncoord =  [0 0; 0 1.0000; 1.0000 0; 1.0000 1.0000; 0.3581  0; 0 0.5924;
 #           0.3130 1.0000; 0.6686 0; 1.0000 0.3339; 0.5810 0.5883;
 #           1.0000 0.7509; 0.5983 1.0000; 0.8192 1.0000; 0.8782 0;
 #           1.0000 0.5619; 1.0000 0.8884];
 
+ncoord = [2 0; 3 0; 4 0; 5 0; 6 0;
+          1 1; 2 1; 3 1; 4 1; 5 1; 6 1;
+          0 2; 1 2; 2 2; 3 2; 4 2; 5 2; 6 2;
+          0 3; 1 3; 2 3; 3 3; 4 3; 5 3; 6 3;
+          0 4; 1 4; 2 4; 3 4; 4 4; 5 4; 6 4;
+          0 5; 1 5; 2 5; 3 5; 4 5; 5 5; 6 5;
+          0 6; 1 6; 2 6; 3 6; 4 6; 5 6; 6 6]
+
+# number of nodes:
+n = size(ncoord)[1]
 # evaluation point
 #x = 0.297619
 #x = 0.211325
@@ -50,7 +58,7 @@ ncoord = [0.0 0.0; 0.5 0.0; 0.0 0.5; 0.5 0.5; 1.0 0.5; 0.0 1.0; 0.5 1.0; 1.0 1.0
 #x = [0.25 0.25]
 #x = [0.16666 0.5]
 #x=[0.5 0.5]
-x = [0.2 0.2]
+#x = [0.2 0.2]
 #x = [0.665465 0.447852]
 #x = [0.25 0.25]
 #x = [0.35]
@@ -58,12 +66,12 @@ x = [0.2 0.2]
 
 # prior function data
 rtol = 1e-10                   # required tolerance for maxent iterations
-prior_type = "gaussian"        # 'quartic_spline', 'cubic_spline', 'gaussian' or 'constant'
+prior_type = "cubic_spline"    # 'quartic_spline', 'cubic_spline', 'gaussian' or 'constant'
 
 compute = 2                    # = 1 for basis functions computation only
                                # = 2 for both basis functions and its gradient.
 
-gamma = 8.0*ones(n)            # support-width (dilation) parameter (needed only other than 'constant' prior)
+gamma = 2.0*ones(n)            # support-width (dilation) parameter (needed only other than 'constant' prior)
                                # typical values for gamma:
                                #   gaussian = 2 to 10
                                #   quartic spline = 1 to 2
@@ -76,26 +84,35 @@ ilambda = [0; 0];         # 2D
 #ilambda = [0; 0; 0];     # 3D
 
 printmaxent = "yes"
-checktest = "yes"
+checktest = "no"
 
-if length(x)!=dim
-    error("length(x) and dim dimensions mismatch:: $(length(x)) vs $(dim)")
-end
-if dim>=2 && length(x)!=size(ncoord)[2]
-    error("length(x) and size(ncoord)[2] dimensions mismatch: $(length(x)) vs $(size(ncoord)[2])")
-end
-if dim==1 && length(x)!=length(ncoord)/n
-    error("length(x) and length(ncoord)/n dimensions mismatch: $(length(x)) vs $(length(ncoord)/n)")
-end
-if size(ncoord)[1]!=n
-    error("size(ncoord)[1] and n dimensions mismatch: $(size(ncoord)[1]) vs $(n)")
-end
-if length(gamma)!=n
-    error("length(gamma) and n dimensions mismatch: $(length(gamma)) vs $(n)")
-end
-if length(ilambda)!=dim
-    error("length(ilambda) and dim dimensions mismatch: $(length(ilambda)) vs $(dim)")
-end
+
+X = Y = LinRange(0, 6.0, 100)
+Basis = zero(rand(length(ncoord), length(X), length(Y)))
+
+for i in 1:length(X)
+    for j in 1:length(Y)
+        x = [X[i], Y[j]]
+        
+
+        if length(x)!=dim
+            error("length(x) and dim dimensions mismatch:: $(length(x)) vs $(dim)")
+        end
+        if dim>=2 && length(x)!=size(ncoord)[2]
+            error("length(x) and size(ncoord)[2] dimensions mismatch: $(length(x)) vs $(size(ncoord)[2])")
+        end
+        if dim==1 && length(x)!=length(ncoord)/n
+            error("length(x) and length(ncoord)/n dimensions mismatch: $(length(x)) vs $(length(ncoord)/n)")
+        end
+        if size(ncoord)[1]!=n
+            error("size(ncoord)[1] and n dimensions mismatch: $(size(ncoord)[1]) vs $(n)")
+        end
+        if length(gamma)!=n
+            error("length(gamma) and n dimensions mismatch: $(length(gamma)) vs $(n)")
+        end
+        if length(ilambda)!=dim
+            error("length(ilambda) and dim dimensions mismatch: $(length(ilambda)) vs $(dim)")
+        end
 
 ################################################################################
 #                        Compute maxent basis functions
@@ -108,6 +125,27 @@ end
 #      AS 2 TIMES OR 3 TIMES THE LARGEST NODAL SPACING IN YOUR MESH, AND THEN PASS IT
 #      TO MAXENT FUNCTION AS AN ARGUMENT.
 
-h_node = nodespacing(dim,n,ncoord)
+        h_node = nodespacing(dim,n,ncoord)
 
-maxent(dim,n,ncoord,x,prior_type,gamma,ilambda,rtol,compute,printmaxent,checktest,unstructured,h_node)
+        try
+            neighbours, phi = maxent(dim,n,ncoord,x,prior_type,gamma,ilambda,rtol,compute,printmaxent,checktest,unstructured,h_node)
+        
+
+            for k=1:length(neighbours)
+                if isnan(phi[k])
+                    phi[k] = 0
+                end
+                Basis[neighbours[k], j, i] = phi[k]
+            end
+        catch
+            for k=1:length(ncoord)
+                Basis[k, j, i] = 0
+            end
+            println("Error: for x = $x")
+        end
+    end
+end
+
+# Plot the basis functions:
+inode = 1
+surface(X, Y, Basis[inode, :, :], xlabel="x", ylabel="y", zlabel="Basis function", title="Basis function $inode Position $(ncoord[inode, :])", color=:viridis, camera=(30, 30), size=(800, 600))
