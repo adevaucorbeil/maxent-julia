@@ -9,6 +9,7 @@ function f_of_lambda(dim,w,xc,lambda,len)
     dgam=sum(temp1[:]) # gradient of log(Z)
     hgam = sum( phi.*(xc).^2) - dgam*dgam
   else
+    println("xc=",xc)
     Z_I=w.*exp.(-(xc*lambda))
     Z=sum(Z_I)
     phi=Z_I/Z # basis function

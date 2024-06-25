@@ -126,6 +126,7 @@ for i in 1:length(X)
 #      TO MAXENT FUNCTION AS AN ARGUMENT.
 
         h_node = nodespacing(dim,n,ncoord)
+        println("h_node=$h_node")
 
         try
             neighbours, phi = maxent(dim,n,ncoord,x,prior_type,gamma,ilambda,rtol,compute,printmaxent,checktest,unstructured,h_node)
